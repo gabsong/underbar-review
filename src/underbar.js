@@ -180,6 +180,23 @@
   //   }); // should be 5, regardless of the iterator function passed in
   //          No accumulator is given so the first element is used.
   _.reduce = function(collection, iterator, accumulator) {
+    // accumulator defaults to collection[0] if no initial value given
+    if (accumulator === undefined) {
+      accumulator = collection[0];
+      // iterate all values in the collection except the first one
+      for (let i = 1; i < collection.length; i++) {
+        // apply the iterator and return to the accumulator
+        accumulator = iterator(accumulator, collection[i], i, collection);
+      }
+    } else {
+      // iterate all values in the collection
+      for (let i = 0; i < collection.length; i++) {
+      // apply the iterator and return to the accumulator
+        accumulator = iterator(accumulator, collection[i], i, collection);
+      }
+    }
+
+    return accumulator;
   };
 
   // Determine if the array or object contains a given value (using `===`).
@@ -188,8 +205,10 @@
     // terms of reduce(). Here's a freebie to demonstrate!
     return _.reduce(collection, function(wasFound, item) {
       if (wasFound) {
+        //debugger
         return true;
       }
+
       return item === target;
     }, false);
   };
@@ -198,12 +217,16 @@
   // Determine whether all of the elements match a truth test.
   _.every = function(collection, iterator) {
     // TIP: Try re-using reduce() here.
+
+    // _.reduce()
   };
 
   // Determine whether any of the elements pass a truth test. If no iterator is
   // provided, provide a default one
   _.some = function(collection, iterator) {
     // TIP: There's a very clever way to re-use every() here.
+
+    // _.every()
   };
 
 
@@ -283,6 +306,7 @@
   // parameter. For example _.delay(someFunction, 500, 'a', 'b') will
   // call someFunction('a', 'b') after 500ms
   _.delay = function(func, wait) {
+    setTimeout(func, wait);
   };
 
 
@@ -297,6 +321,18 @@
   // input array. For a tip on how to make a copy of an array, see:
   // http://mdn.io/Array.prototype.slice
   _.shuffle = function(array) {
+    const arr = [];
+    const nums = [];
+
+    for (let i = 0; i  < array.length; i++) {
+      nums.push(i);
+    }
+
+    while (nums.length > 0) {
+      arr.push(array[nums.pop(Math.floor(Math.random() * nums.length))]);
+    }
+
+    return arr;
   };
 
 
