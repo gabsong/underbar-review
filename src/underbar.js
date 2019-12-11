@@ -179,20 +179,26 @@
   //     return total + number * number;
   //   }); // should be 5, regardless of the iterator function passed in
   //          No accumulator is given so the first element is used.
-  _.reduce = function(collection, iterator, accumulator) {
+  _.reduce = function (collection, iterator, accumulator) {
     // accumulator defaults to collection[0] if no initial value given
-    if (accumulator === undefined) {
-      accumulator = collection[0];
-      // iterate all values in the collection except the first one
-      for (let i = 1; i < collection.length; i++) {
-        // apply the iterator and return to the accumulator
-        accumulator = iterator(accumulator, collection[i], i, collection);
+    if (Array.isArray(collection)) {
+      if (accumulator === undefined) {
+        accumulator = collection[0];
+        // iterate all values in the collection except the first one
+        for (let i = 1; i < collection.length; i++) {
+          // apply the iterator and return to the accumulator
+          accumulator = iterator(accumulator, collection[i], i, collection);
+        }
+      } else {
+        // iterate all values in the collection
+        for (let i = 0; i < collection.length; i++) {
+          // apply the iterator and return to the accumulator
+          accumulator = iterator(accumulator, collection[i], i, collection);
+        }
       }
     } else {
-      // iterate all values in the collection
-      for (let i = 0; i < collection.length; i++) {
-      // apply the iterator and return to the accumulator
-        accumulator = iterator(accumulator, collection[i], i, collection);
+      for (let key in collection) {
+        accumulator = iterator(accumulator, collection[key], key, collection);
       }
     }
 
@@ -205,7 +211,6 @@
     // terms of reduce(). Here's a freebie to demonstrate!
     return _.reduce(collection, function(wasFound, item) {
       if (wasFound) {
-        //debugger
         return true;
       }
 
@@ -217,8 +222,13 @@
   // Determine whether all of the elements match a truth test.
   _.every = function(collection, iterator) {
     // TIP: Try re-using reduce() here.
-
-    // _.reduce()
+    iterator = iterator || _.identity;
+    for (let i = 0; i < collection.length; i++) {
+      if (!iterator(collection[i])) {
+        return false;
+      }
+    }
+    return true;
   };
 
   // Determine whether any of the elements pass a truth test. If no iterator is
@@ -226,7 +236,13 @@
   _.some = function(collection, iterator) {
     // TIP: There's a very clever way to re-use every() here.
 
-    // _.every()
+    iterator = iterator || _.identity;
+    for (let i = 0; i < collection.length; i++) {
+      if (iterator(collection[i])) {
+        return true;
+      }
+    }
+    return false;
   };
 
 
@@ -248,12 +264,42 @@
   //   }, {
   //     bla: "even more stuff"
   //   }); // obj1 now contains key1, key2, key3 and bla
-  _.extend = function(obj) {
+  _.extend = function(obj, ...args) {
+    // args = [{}, {}, ...]
+    // _.extend(obj1, {key2: "something new",key3: "something else new"}, {bla: "even more stuff"})
+    // args[0] === {key2: "something new",key3: "something else new"}
+    // args[1] === {bla: "even more stuff"}
+
+    // for loop the args
+    for (let i = 0; i < args.length; i++) {
+      // declare object variable
+      const someObj = args[i];
+      // add property to obj by accessing key and value
+      for (let key in someObj) {
+        const value = someObj[key];
+        obj[key] = value;
+      }
+    }
+
+    return obj;
   };
 
   // Like extend, but doesn't ever overwrite a key that already
   // exists in obj
-  _.defaults = function(obj) {
+  _.defaults = function(obj, ...args) {
+    for (let i = 0; i < args.length; i++) {
+      // declare object variable
+      const someObj = args[i];
+      // add property to obj by accessing key and value
+      for (let key in someObj) {
+        const value = someObj[key];
+        if (obj[key] === undefined) {
+          obj[key] = value;
+        }
+      }
+    }
+
+    return obj;
   };
 
 
@@ -297,6 +343,19 @@
   // already computed the result for the given argument and return that value
   // instead if possible.
   _.memoize = function(func) {
+    let results = {};
+
+    let mem = function() {
+      const str = JSON.stringify(arguments);
+
+      if (!(str in results)) {
+        results[str] = func.apply(this, arguments);
+      }
+
+      return results[str];
+    };
+
+    return mem;
   };
 
   // Delays a function for the given number of milliseconds, and then calls
@@ -305,8 +364,10 @@
   // The arguments for the original function are passed after the wait
   // parameter. For example _.delay(someFunction, 500, 'a', 'b') will
   // call someFunction('a', 'b') after 500ms
-  _.delay = function(func, wait) {
-    setTimeout(func, wait);
+  _.delay = function(func, wait, ...args) {
+    setTimeout(function() {
+      func.apply(null, args);
+    }, wait);
   };
 
 
